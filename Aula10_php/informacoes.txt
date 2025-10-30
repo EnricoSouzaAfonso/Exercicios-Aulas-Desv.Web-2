@@ -1,0 +1,7 @@
+para testar como adm, use esse usuário:
+
+email: admadmadm@adm.com
+senha: adm123456
+
+
+para usuarios é só criar do zero mesmo.
