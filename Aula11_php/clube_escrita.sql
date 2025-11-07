@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 07/11/2025 às 03:29
+-- Tempo de geração: 07/11/2025 às 03:34
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Banco de dados: `clube_escrita`
 --
+CREATE DATABASE IF NOT EXISTS `clube_escrita` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `clube_escrita`;
 
 -- --------------------------------------------------------
 
