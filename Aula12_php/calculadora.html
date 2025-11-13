@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora com API</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f0f0; }
+        .calculadora { border: 2px solid #333; border-radius: 10px; padding: 15px; background: #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #display { width: 98%; height: 50px; font-size: 2em; text-align: right; margin-bottom: 10px; padding: 5px; }
+        table { width: 100%; }
+        button { width: 100%; height: 50px; font-size: 1.5em; cursor: pointer; }
+        .operador { background: #f9a825; }
+    </style>
+</head>
+<body>
+
+<div class="calculadora">
+    <input type="text" id="display" value="0" disabled>
+    <table>
+        <tr>
+            <td><button onclick="pressionarBotao('MC')">MC</button></td>
+            <td><button onclick="pressionarBotao('MR')">MR</button></td>
+            <td><button onclick="pressionarBotao('M-')">M-</button></td>
+            <td><button onclick="pressionarBotao('M+')">M+</button></td>
+        </tr>
+        <tr>
+            <td><button onclick="pressionarBotao('C')">C</button></td>
+            <td><button onclick="pressionarBotao('√')">√</button></td>
+            <td><button class="operador" onclick="pressionarBotao('/')">/</button></td>
+            <td><button class="operador" onclick="pressionarBotao('*')">*</button></td>
+        </tr>
+        <tr>
+            <td><button onclick="pressionarBotao('7')">7</button></td>
+            <td><button onclick="pressionarBotao('8')">8</button></td>
+            <td><button onclick="pressionarBotao('9')">9</button></td>
+            <td><button class="operador" onclick="pressionarBotao('-')">-</button></td>
+        </tr>
+        <tr>
+            <td><button onclick="pressionarBotao('4')">4</button></td>
+            <td><button onclick="pressionarBotao('5')">5</button></td>
+            <td><button onclick="pressionarBotao('6')">6</button></td>
+            <td><button class="operador" onclick="pressionarBotao('+')">+</button></td>
+        </tr>
+        <tr>
+            <td><button onclick="pressionarBotao('1')">1</button></td>
+            <td><button onclick="pressionarBotao('2')">2</button></td>
+            <td><button onclick="pressionarBotao('3')">3</button></td>
+            <td rowspan="2"><button class="operador" style="height: 105px;" onclick="pressionarBotao('=')">=</button></td>
+        </tr>
+        <tr>
+            <td colspan="2"><button onclick="pressionarBotao('0')">0</button></td>
+            <td><button onclick="pressionarBotao('.')">.</button></td>
+        </tr>
+    </table>
+</div>
+
+<script>
+    const display = document.getElementById('display');
+    let valorAtual = '0';
+    let primeiroValor = null;
+    let operador = null;
+    let aguardandoSegundoValor = false;
+
+    function atualizarDisplay() {
+        display.value = valorAtual;
+    }
+
+    function limpar() {
+        valorAtual = '0';
+        primeiroValor = null;
+        operador = null;
+        aguardandoSegundoValor = false;
+        atualizarDisplay();
+    }
+
+    function inserirNumero(numero) {
+        if (aguardandoSegundoValor) {
+            valorAtual = numero;
+            aguardandoSegundoValor = false;
+        } else {
+            valorAtual = valorAtual === '0' ? numero : valorAtual + numero;
+        }
+        atualizarDisplay();
+    }
+
+    function inserirDecimal() {
+        if (!valorAtual.includes('.')) {
+            valorAtual += '.';
+        }
+        atualizarDisplay();
+    }
+    
+    function chamarApi(endpoint, callback) {
+        const xhttp = new XMLHttpRequest();
+        xhttp.onload = function() {
+            const resposta = JSON.parse(this.responseText);
+            callback(resposta);
+        }
+        xhttp.open("GET", "api/" + endpoint);
+        xhttp.send();
+    }
+
+    function pressionarBotao(valor) {
+        switch (valor) {
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+                operador = valor;
+                primeiroValor = parseFloat(valorAtual);
+                aguardandoSegundoValor = true;
+                break;
+            case '=':
+                if (operador === null) return;
+                const segundoValor = parseFloat(valorAtual);
+                let operacao = '';
+                if (operador === '+') operacao = 'soma';
+                if (operador === '-') operacao = 'subtrai';
+                if (operador === '*') operacao = 'multiplica';
+                if (operador === '/') operacao = 'divide';
+                chamarApi(`${operacao}.php?x=${primeiroValor}&y=${segundoValor}`, (resp) => {
+                    valorAtual = String(resp.resultado);
+                    operador = null;
+                    atualizarDisplay();
+                });
+                break;
+            case '.':
+                inserirDecimal();
+                break;
+            case 'C':
+                limpar();
+                break;
+            case '√':
+                chamarApi(`raiz.php?x=${valorAtual}`, (resp) => {
+                    valorAtual = String(resp.resultado);
+                    atualizarDisplay();
+                });
+                break;
+            case 'MC':
+                chamarApi('mc.php', (resp) => alert(resp.status));
+                break;
+            case 'MR':
+                chamarApi('mr.php', (resp) => {
+                    valorAtual = resp.valor;
+                    atualizarDisplay();
+                });
+                break;
+            case 'M+':
+                chamarApi(`mplus.php?valor=${valorAtual}`, (resp) => alert('Memória: ' + resp.novo_valor));
+                break;
+            case 'M-':
+                chamarApi(`mminus.php?valor=${valorAtual}`, (resp) => alert('Memória: ' + resp.novo_valor));
+                break;
+            default: // Números
+                inserirNumero(valor);
+        }
+    }
+</script>
+
+</body>
+</html>
